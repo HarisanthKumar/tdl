@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cute Daily Planner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #5a5a5a;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #ff85a2;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 0px rgba(255, 133, 162, 0.2);
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1.1rem;
+        }
+
+        .planner-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .timeline-section {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .todo-section {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: #6c63ff;
+            font-size: 1.5rem;
+        }
+
+        .section-title i {
+            font-size: 1.8rem;
+        }
+
+        .timeline {
+            position: relative;
+            height: 600px;
+            background: #f9f9f9;
+            border-radius: 15px;
+            padding: 10px;
+            overflow-y: auto;
+            border: 2px dashed #e0e0e0;
+        }
+
+        .time-marker {
+            position: absolute;
+            width: 100%;
+            height: 1px;
+            background: #e0e0e0;
+            left: 0;
+        }
+
+        .time-label {
+            position: absolute;
+            left: 0;
+            transform: translateY(-50%);
+            font-size: 0.8rem;
+            color: #888;
+            background: white;
+            padding: 0 5px;
+            z-index: 1;
+        }
+
+        .event {
+            position: absolute;
+            width: calc(100% - 60px); /* Shorter width so time labels are visible */
+            left: 50px; /* Offset to make room for time labels */
+            border-radius: 10px;
+            padding: 8px 12px;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .event:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .event-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .event-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            flex-grow: 1;
+        }
+
+        .event-time {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .event-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            z-index: 100;
+            max-width: 250px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .add-event-btn {
+            background: #6c63ff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(108, 99, 255, 0.3);
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .add-event-btn:hover {
+            transform: scale(1.1);
+            background: #5a52d5;
+        }
+
+        .todo-list {
+            list-style-type: none;
+        }
+
+        .todo-item {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+            border-left: 4px solid #6c63ff;
+        }
+
+        .todo-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .todo-checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #6c63ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .todo-checkbox.checked {
+            background: #6c63ff;
+            color: white;
+        }
+
+        .todo-content {
+            flex-grow: 1;
+        }
+
+        .todo-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .todo-time {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .todo-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .todo-actions i {
+            cursor: pointer;
+            color: #888;
+            transition: color 0.3s;
+        }
+
+        .todo-actions i:hover {
+            color: #6c63ff;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-title {
+            margin-bottom: 20px;
+            color: #6c63ff;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            border-color: #6c63ff;
+            outline: none;
+        }
+
+        .color-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+        }
+
+        .color-option.selected {
+            border-color: #333;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #6c63ff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a52d5;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #555;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .days-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .day-btn {
+            background: #6c63ff;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .day-btn:hover {
+            background: #5a52d5;
+            transform: translateY(-2px);
+        }
+
+        .current-day {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #6c63ff;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #888;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #e0e0e0;
+        }
+
+        @media (max-width: 768px) {
+            .planner-container {
+                flex-direction: column;
+            }
+            
+            .timeline {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>My Cute Daily Planner</h1>
+            <p class="subtitle">Plan your day with colorful events and todos!</p>
+        </header>
+
+        <div class="days-navigation">
+            <button class="day-btn" id="prev-day"><i class="fas fa-chevron-left"></i> Previous Day</button>
+            <div class="current-day" id="current-day">Monday, June 12</div>
+            <button class="day-btn" id="next-day">Next Day <i class="fas fa-chevron-right"></i></button>
+        </div>
+
+        <div class="planner-container">
+            <div class="timeline-section">
+                <div class="section-title">
+                    <i class="fas fa-clock"></i>
+                    <h2>Daily Timeline</h2>
+                </div>
+                <div class="timeline" id="timeline">
+                    <!-- Time markers will be generated here -->
+                </div>
+                <button class="add-event-btn" id="add-event-btn">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+
+            <div class="todo-section">
+                <div class="section-title">
+                    <i class="fas fa-list-check"></i>
+                    <h2>Today's Todos</h2>
+                </div>
+                <ul class="todo-list" id="todo-list">
+                    <!-- Todo items will be generated here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Modal -->
+    <div class="modal" id="event-modal">
+        <div class="modal-content">
+            <div class="modal-title">
+                <i class="fas fa-calendar-plus"></i>
+                <span id="modal-title">Add New Event</span>
+            </div>
+            <form id="event-form">
+                <input type="hidden" id="event-id">
+                <div class="form-group">
+                    <label for="event-title">Event Title</label>
+                    <input type="text" id="event-title" placeholder="What are you planning?" required>
+                </div>
+                <div class="form-group">
+                    <label for="event-start">Start Time</label>
+                    <input type="time" id="event-start" required>
+                </div>
+                <div class="form-group">
+                    <label for="event-end">End Time</label>
+                    <input type="time" id="event-end" required>
+                </div>
+                <div class="form-group">
+                    <label for="event-notes">Notes</label>
+                    <textarea id="event-notes" rows="3" placeholder="Add some details..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Color</label>
+                    <div class="color-options">
+                        <div class="color-option selected" style="background-color: #ff85a2;" data-color="#ff85a2"></div>
+                        <div class="color-option" style="background-color: #6c63ff;" data-color="#6c63ff"></div>
+                        <div class="color-option" style="background-color: #4cd964;" data-color="#4cd964"></div>
+                        <div class="color-option" style="background-color: #5ac8fa;" data-color="#5ac8fa"></div>
+                        <div class="color-option" style="background-color: #ffcc00;" data-color="#ffcc00"></div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancel-event">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="save-event">Save Event</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Initialize daysData with current date
+        const today = new Date();
+        const todayString = today.toISOString().split('T')[0];
+        
+        let daysData = {
+            [todayString]: {
+                date: formatDate(today),
+                events: [
+                    { id: 1, title: "Morning Yoga", start: "07:00", end: "08:00", notes: "Don't forget the mat!", color: "#ff85a2" },
+                    { id: 2, title: "Work on Project", start: "09:00", end: "12:00", notes: "Finish the timeline component", color: "#6c63ff" },
+                    { id: 3, title: "Lunch Break", start: "12:30", end: "13:30", notes: "Try the new cafe", color: "#4cd964" },
+                    { id: 4, title: "Meeting with Team", start: "14:00", end: "15:30", notes: "Prepare presentation", color: "#5ac8fa" }
+                ]
+            }
+        };
+
+        // Current day tracking
+        let currentDate = todayString;
+        let nextEventId = 5;
+
+        // DOM Elements
+        const timeline = document.getElementById('timeline');
+        const todoList = document.getElementById('todo-list');
+        const addEventBtn = document.getElementById('add-event-btn');
+        const eventModal = document.getElementById('event-modal');
+        const eventForm = document.getElementById('event-form');
+        const modalTitle = document.getElementById('modal-title');
+        const eventIdInput = document.getElementById('event-id');
+        const eventTitleInput = document.getElementById('event-title');
+        const eventStartInput = document.getElementById('event-start');
+        const eventEndInput = document.getElementById('event-end');
+        const eventNotesInput = document.getElementById('event-notes');
+        const cancelEventBtn = document.getElementById('cancel-event');
+        const currentDayElement = document.getElementById('current-day');
+        const prevDayBtn = document.getElementById('prev-day');
+        const nextDayBtn = document.getElementById('next-day');
+        const colorOptions = document.querySelectorAll('.color-option');
+
+        // Initialize the app
+        function init() {
+            renderTimeline();
+            renderEvents();
+            renderTodos();
+            setupEventListeners();
+            loadFromLocalStorage();
+        }
+
+        // Render the timeline with time markers
+        function renderTimeline() {
+            timeline.innerHTML = '';
+            
+            // Create time markers for each hour
+            for (let hour = 0; hour <= 24; hour++) {
+                const timeMarker = document.createElement('div');
+                timeMarker.className = 'time-marker';
+                timeMarker.style.top = `${(hour / 24) * 100}%`;
+                
+                const timeLabel = document.createElement('div');
+                timeLabel.className = 'time-label';
+                timeLabel.style.top = `${(hour / 24) * 100}%`;
+                timeLabel.textContent = `${hour.toString().padStart(2, '0')}:00`;
+                
+                timeline.appendChild(timeMarker);
+                timeline.appendChild(timeLabel);
+            }
+        }
+
+        // Render events on the timeline
+        function renderEvents() {
+            // Clear existing events
+            document.querySelectorAll('.event').forEach(el => el.remove());
+            
+            const events = daysData[currentDate]?.events || [];
+            
+            events.forEach(event => {
+                const eventElement = createEventElement(event);
+                timeline.appendChild(eventElement);
+            });
+        }
+
+        // Create an event element
+        function createEventElement(event) {
+            const eventElement = document.createElement('div');
+            eventElement.className = 'event';
+            eventElement.dataset.id = event.id;
+            
+            // Calculate position based on time
+            const startMinutes = timeToMinutes(event.start);
+            const endMinutes = timeToMinutes(event.end);
+            const top = (startMinutes / (24 * 60)) * 100;
+            const height = ((endMinutes - startMinutes) / (24 * 60)) * 100;
+            
+            eventElement.style.top = `${top}%`;
+            eventElement.style.height = `${height}%`;
+            eventElement.style.background = event.color;
+            eventElement.style.color = getContrastColor(event.color);
+            
+            eventElement.innerHTML = `
+                <div class="event-color" style="background: ${getContrastColor(event.color)}"></div>
+                <div class="event-title">${event.title}</div>
+                <div class="event-time">${formatTime(event.start)} - ${formatTime(event.end)}</div>
+            `;
+            
+            // Add event listeners
+            eventElement.addEventListener('click', () => editEvent(event.id));
+            eventElement.addEventListener('mouseenter', showEventTooltip);
+            eventElement.addEventListener('mouseleave', hideEventTooltip);
+            
+            // Make event draggable
+            makeEventDraggable(eventElement, event);
+            
+            return eventElement;
+        }
+
+        // Show event tooltip on hover
+        function showEventTooltip(e) {
+            const eventId = e.currentTarget.dataset.id;
+            const event = daysData[currentDate].events.find(ev => ev.id == eventId);
+            
+            if (event.notes) {
+                const tooltip = document.createElement('div');
+                tooltip.className = 'event-tooltip';
+                tooltip.textContent = event.notes;
+                tooltip.style.left = `${e.pageX + 10}px`;
+                tooltip.style.top = `${e.pageY + 10}px`;
+                
+                document.body.appendChild(tooltip);
+                
+                // Store reference to remove later
+                e.currentTarget.tooltip = tooltip;
+            }
+        }
+
+        // Hide event tooltip
+        function hideEventTooltip(e) {
+            if (e.currentTarget.tooltip) {
+                e.currentTarget.tooltip.remove();
+                e.currentTarget.tooltip = null;
+            }
+        }
+
+        // Make event draggable
+        function makeEventDraggable(eventElement, event) {
+            let isDragging = false;
+            let dragStartY = 0;
+            let originalTop = 0;
+            
+            eventElement.addEventListener('mousedown', startDrag);
+            
+            function startDrag(e) {
+                isDragging = true;
+                dragStartY = e.clientY;
+                originalTop = parseFloat(eventElement.style.top);
+                document.addEventListener('mousemove', onDrag);
+                document.addEventListener('mouseup', stopDrag);
+                eventElement.style.opacity = '0.8';
+                e.preventDefault();
+            }
+            
+            function onDrag(e) {
+                if (!isDragging) return;
+                
+                const deltaY = e.clientY - dragStartY;
+                const newTop = Math.max(0, Math.min(100, originalTop + (deltaY / timeline.offsetHeight) * 100));
+                eventElement.style.top = `${newTop}%`;
+                
+                // Update time display
+                const newStartTime = minutesToTime(Math.round((newTop / 100) * (24 * 60)));
+                const duration = timeToMinutes(event.end) - timeToMinutes(event.start);
+                const newEndTime = minutesToTime(Math.round(((newTop + (duration / (24 * 60)) * 100) / 100) * (24 * 60)));
+                
+                eventElement.querySelector('.event-time').textContent = `${formatTime(newStartTime)} - ${formatTime(newEndTime)}`;
+            }
+            
+            function stopDrag() {
+                if (!isDragging) return;
+                
+                isDragging = false;
+                document.removeEventListener('mousemove', onDrag);
+                document.removeEventListener('mouseup', stopDrag);
+                eventElement.style.opacity = '1';
+                
+                // Update event data
+                const newTop = parseFloat(eventElement.style.top);
+                const newStartTime = minutesToTime(Math.round((newTop / 100) * (24 * 60)));
+                const duration = timeToMinutes(event.end) - timeToMinutes(event.start);
+                const newEndTime = minutesToTime(Math.round(((newTop + (duration / (24 * 60)) * 100) / 100) * (24 * 60)));
+                
+                event.start = newStartTime;
+                event.end = newEndTime;
+                
+                // Update todos
+                renderTodos();
+                saveToLocalStorage();
+            }
+        }
+
+        // Render todos based on events
+        function renderTodos() {
+            todoList.innerHTML = '';
+            
+            const events = daysData[currentDate]?.events || [];
+            
+            if (events.length === 0) {
+                const emptyState = document.createElement('div');
+                emptyState.className = 'empty-state';
+                emptyState.innerHTML = `
+                    <i class="fas fa-cloud"></i>
+                    <h3>No events planned</h3>
+                    <p>Click the + button to add your first event!</p>
+                `;
+                todoList.appendChild(emptyState);
+                return;
+            }
+            
+            events.forEach(event => {
+                const todoItem = document.createElement('li');
+                todoItem.className = 'todo-item';
+                todoItem.innerHTML = `
+                    <div class="todo-checkbox">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="todo-content">
+                        <div class="todo-title">${event.title}</div>
+                        <div class="todo-time">${formatTime(event.start)} - ${formatTime(event.end)}</div>
+                    </div>
+                    <div class="todo-actions">
+                        <i class="fas fa-edit" data-id="${event.id}"></i>
+                        <i class="fas fa-trash" data-id="${event.id}"></i>
+                    </div>
+                `;
+                
+                // Add event listeners
+                const checkbox = todoItem.querySelector('.todo-checkbox');
+                checkbox.addEventListener('click', () => {
+                    checkbox.classList.toggle('checked');
+                });
+                
+                const editBtn = todoItem.querySelector('.fa-edit');
+                editBtn.addEventListener('click', () => editEvent(event.id));
+                
+                const deleteBtn = todoItem.querySelector('.fa-trash');
+                deleteBtn.addEventListener('click', () => deleteEvent(event.id));
+                
+                todoList.appendChild(todoItem);
+            });
+        }
+
+        // Add new event
+        function addNewEvent() {
+            modalTitle.textContent = 'Add New Event';
+            eventIdInput.value = '';
+            eventTitleInput.value = '';
+            eventStartInput.value = '09:00';
+            eventEndInput.value = '10:00';
+            eventNotesInput.value = '';
+            
+            // Reset color selection
+            colorOptions.forEach(opt => opt.classList.remove('selected'));
+            colorOptions[0].classList.add('selected');
+            
+            eventModal.style.display = 'flex';
+        }
+
+        // Edit existing event
+        function editEvent(eventId) {
+            const event = daysData[currentDate].events.find(ev => ev.id == eventId);
+            
+            if (!event) return;
+            
+            modalTitle.textContent = 'Edit Event';
+            eventIdInput.value = event.id;
+            eventTitleInput.value = event.title;
+            eventStartInput.value = event.start;
+            eventEndInput.value = event.end;
+            eventNotesInput.value = event.notes || '';
+            
+            // Set color selection
+            colorOptions.forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.dataset.color === event.color) {
+                    opt.classList.add('selected');
+                }
+            });
+            
+            eventModal.style.display = 'flex';
+        }
+
+        // Delete event
+        function deleteEvent(eventId) {
+            if (confirm('Are you sure you want to delete this event?')) {
+                daysData[currentDate].events = daysData[currentDate].events.filter(ev => ev.id != eventId);
+                renderEvents();
+                renderTodos();
+                saveToLocalStorage();
+            }
+        }
+
+        // Save event (from form)
+        function saveEvent(e) {
+            e.preventDefault();
+            
+            const eventId = eventIdInput.value;
+            const title = eventTitleInput.value;
+            const start = eventStartInput.value;
+            const end = eventEndInput.value;
+            const notes = eventNotesInput.value;
+            const selectedColor = document.querySelector('.color-option.selected').dataset.color;
+            
+            if (timeToMinutes(start) >= timeToMinutes(end)) {
+                alert('End time must be after start time!');
+                return;
+            }
+            
+            if (eventId) {
+                // Update existing event
+                const eventIndex = daysData[currentDate].events.findIndex(ev => ev.id == eventId);
+                if (eventIndex !== -1) {
+                    daysData[currentDate].events[eventIndex] = {
+                        ...daysData[currentDate].events[eventIndex],
+                        title,
+                        start,
+                        end,
+                        notes,
+                        color: selectedColor
+                    };
+                }
+            } else {
+                // Add new event
+                const newEvent = {
+                    id: nextEventId++,
+                    title,
+                    start,
+                    end,
+                    notes,
+                    color: selectedColor
+                };
+                
+                if (!daysData[currentDate]) {
+                    daysData[currentDate] = {
+                        date: formatDate(new Date(currentDate)),
+                        events: []
+                    };
+                }
+                
+                daysData[currentDate].events.push(newEvent);
+            }
+            
+            renderEvents();
+            renderTodos();
+            eventModal.style.display = 'none';
+            saveToLocalStorage();
+        }
+
+        // Navigate to previous day
+        function goToPreviousDay() {
+            const current = new Date(currentDate);
+            current.setDate(current.getDate() - 1);
+            currentDate = current.toISOString().split('T')[0];
+            
+            // Create empty day if it doesn't exist
+            if (!daysData[currentDate]) {
+                daysData[currentDate] = {
+                    date: formatDate(current),
+                    events: []
+                };
+            }
+            
+            currentDayElement.textContent = daysData[currentDate].date;
+            renderEvents();
+            renderTodos();
+            saveToLocalStorage();
+        }
+
+        // Navigate to next day
+        function goToNextDay() {
+            const current = new Date(currentDate);
+            current.setDate(current.getDate() + 1);
+            currentDate = current.toISOString().split('T')[0];
+            
+            // Create empty day if it doesn't exist
+            if (!daysData[currentDate]) {
+                daysData[currentDate] = {
+                    date: formatDate(current),
+                    events: []
+                };
+            }
+            
+            currentDayElement.textContent = daysData[currentDate].date;
+            renderEvents();
+            renderTodos();
+            saveToLocalStorage();
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            addEventBtn.addEventListener('click', addNewEvent);
+            eventForm.addEventListener('submit', saveEvent);
+            cancelEventBtn.addEventListener('click', () => {
+                eventModal.style.display = 'none';
+            });
+            
+            prevDayBtn.addEventListener('click', goToPreviousDay);
+            nextDayBtn.addEventListener('click', goToNextDay);
+            
+            // Color selection
+            colorOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    colorOptions.forEach(opt => opt.classList.remove('selected'));
+                    option.classList.add('selected');
+                });
+            });
+            
+            // Close modal when clicking outside
+            eventModal.addEventListener('click', (e) => {
+                if (e.target === eventModal) {
+                    eventModal.style.display = 'none';
+                }
+            });
+        }
+
+        // Utility functions
+        function timeToMinutes(time) {
+            const [hours, minutes] = time.split(':').map(Number);
+            return hours * 60 + minutes;
+        }
+
+        function minutesToTime(minutes) {
+            const hours = Math.floor(minutes / 60);
+            const mins = minutes % 60;
+            return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+        }
+
+        function formatTime(time) {
+            const [hours, minutes] = time.split(':').map(Number);
+            const period = hours >= 12 ? 'PM' : 'AM';
+            const displayHours = hours % 12 || 12;
+            return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+        }
+
+        function formatDate(date) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        function getContrastColor(hexcolor) {
+            // If it's a named color, return black or white based on brightness
+            if (hexcolor.startsWith('#')) {
+                const r = parseInt(hexcolor.substr(1, 2), 16);
+                const g = parseInt(hexcolor.substr(3, 2), 16);
+                const b = parseInt(hexcolor.substr(5, 2), 16);
+                const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+                return brightness > 128 ? '#000000' : '#FFFFFF';
+            }
+            return '#000000';
+        }
+
+        // Local storage functions
+        function saveToLocalStorage() {
+            localStorage.setItem('daysData', JSON.stringify(daysData));
+            localStorage.setItem('nextEventId', nextEventId.toString());
+        }
+
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem('daysData');
+            const savedNextId = localStorage.getItem('nextEventId');
+            
+            if (savedData) {
+                daysData = JSON.parse(savedData);
+            }
+            
+            if (savedNextId) {
+                nextEventId = parseInt(savedNextId);
+            }
+            
+            // Update current day display
+            currentDayElement.textContent = daysData[currentDate]?.date || formatDate(new Date(currentDate));
+            
+            // Re-render
+            renderEvents();
+            renderTodos();
+        }
+
+        // Initialize the app
+        init();
+    </script>
+</body>
+</html>
